@@ -13,3 +13,13 @@ app.get("/", (req, res) => {
 app.listen(3000, () => {
   console.log("i am running");
 });
+
+/*
+---------Our Endpoints-----------
+/                --> this is home
+/signin          --> POST = success/fail
+/register        --> POST = user
+/profile/:userID --> GET = user 
+/image           --> PUT --> user 
+
+*/
