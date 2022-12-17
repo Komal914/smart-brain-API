@@ -30,11 +30,12 @@ const database = {
   ],
 };
 
-//creating routes
+//HOME
 app.get("/", (req, res) => {
-  res.send("this is home");
+  res.send(database.users);
 });
 
+//SIGNIN
 app.post("/signin", (req, res) => {
   if (
     req.body.email === database.users[0].email &&
@@ -44,6 +45,20 @@ app.post("/signin", (req, res) => {
   } else {
     res.status(400).json("error loggin in ");
   }
+});
+
+//REGISTER
+app.post("/register", (req, res) => {
+  const { email, name, password } = req.body;
+  database.users.push({
+    id: "125",
+    name: name,
+    email: email,
+    password: password,
+    entries: 0,
+    joined: new Date(),
+  });
+  res.json(database.users[database.users.length - 1]);
 });
 
 //listening on our port
