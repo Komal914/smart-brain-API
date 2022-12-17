@@ -61,6 +61,18 @@ app.post("/register", (req, res) => {
   res.json(database.users[database.users.length - 1]);
 });
 
+//user home page after loggin in
+app.get("/profile/:id", (req, res) => {
+  const { id } = req.params;
+  database.users.forEach((user) => {
+    if (user.id === id) {
+      res.json(user);
+    } else {
+      res.status(404).json("no such user");
+    }
+  });
+});
+
 //listening on our port
 app.listen(3001, () => {
   console.log("i am running");
