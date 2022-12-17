@@ -5,6 +5,9 @@ const bodyParser = require("body-parser");
 //calling express on our application
 const app = express();
 
+//body parser
+app.use(bodyParser.json());
+
 //our database
 const database = {
   users: [
