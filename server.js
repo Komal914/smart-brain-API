@@ -15,7 +15,6 @@ const database = {
       id: "123",
       name: "john",
       email: "john@gmail.com",
-      password: "cookies",
       entries: 0,
       joined: new Date(),
     },
@@ -23,9 +22,15 @@ const database = {
       id: "124",
       name: "Sally",
       email: "Sally@gmail.com",
-      password: "bananas",
       entries: 0,
       joined: new Date(),
+    },
+  ],
+  login: [
+    {
+      id: 123,
+      hash: "",
+      email: "john@gmail.com",
     },
   ],
 };
@@ -72,7 +77,22 @@ app.get("/profile/:id", (req, res) => {
     }
   });
   if (!found) {
-    res.status(404).json("no such user");
+    res.status(400).json("not found");
+  }
+});
+
+app.put("/image", (req, res) => {
+  const { id } = req.body;
+  let found = false;
+  database.users.forEach((user) => {
+    if (user.id === id) {
+      found = true;
+      user.entries++;
+      return res.json(user.entries);
+    }
+  });
+  if (!found) {
+    res.status(400).json("not found");
   }
 });
 
