@@ -1,5 +1,6 @@
 //getting the libary
 const express = require("express");
+const bodyParser = require("body-parser");
 
 //calling express on our application
 const app = express();
@@ -35,12 +36,15 @@ app.post("/signin", (req, res) => {
   if (
     req.body.email === database.users[0].email &&
     req.body.password === database.users[0].password
-  )
-    res.json("signin");
+  ) {
+    res.json("success");
+  } else {
+    res.status(400).json("error loggin in ");
+  }
 });
 
 //listening on our port
-app.listen(3000, () => {
+app.listen(3001, () => {
   console.log("i am running");
 });
 
