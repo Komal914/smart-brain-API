@@ -2,12 +2,15 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt-nodejs");
-
+const cors = require("cors");
 //calling express on our application
 const app = express();
 
 //body parser
 app.use(bodyParser.json());
+
+//cors
+app.use(cors());
 
 //our database
 const database = {
@@ -15,6 +18,7 @@ const database = {
     {
       id: "123",
       name: "john",
+      password: "cookies",
       email: "john@gmail.com",
       entries: 0,
       joined: new Date(),
@@ -22,6 +26,7 @@ const database = {
     {
       id: "124",
       name: "Sally",
+      password: "apples",
       email: "Sally@gmail.com",
       entries: 0,
       joined: new Date(),
@@ -36,13 +41,30 @@ const database = {
   ],
 };
 
-//HOME
+//HOME ENDPOINT
 app.get("/", (req, res) => {
   res.send(database.users);
 });
 
-//SIGNIN
+//SIGNIN ENDPOINT
 app.post("/signin", (req, res) => {
+  //hash functions testing
+  bcrypt.compare(
+    "chocolate",
+    "$2a$10$nXuSTteqYgS9nwidrC9WRuIzIklUsQ0BtbSZn2CRbnwndvxT6mVri",
+    function (err, res) {
+      console.log("first guess", res);
+    }
+  );
+  bcrypt.compare(
+    "bacon",
+    "$2a$10$nXuSTteqYgS9nwidrC9WRuIzIklUsQ0BtbSZn2CRbnwndvxT6mVri",
+    function (err, res) {
+      console.log("Second guess", res);
+    }
+  );
+
+  //authentication
   if (
     req.body.email === database.users[0].email &&
     req.body.password === database.users[0].password
@@ -53,13 +75,9 @@ app.post("/signin", (req, res) => {
   }
 });
 
-//REGISTER
+//REGISTER ENDPOINT
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
-  bcrypt.hash(password, null, null, function (err, hash) {
-    // Store hash in your password DB.
-    console.log(hash);
-  });
   database.users.push({
     id: "125",
     name: name,
@@ -71,6 +89,7 @@ app.post("/register", (req, res) => {
   res.json(database.users[database.users.length - 1]);
 });
 
+//PROFILE HOME ENDPOINT
 //user home page after loggin in
 app.get("/profile/:id", (req, res) => {
   const { id } = req.params;
@@ -86,6 +105,7 @@ app.get("/profile/:id", (req, res) => {
   }
 });
 
+//IMAGE RANK ENDPOINT
 app.put("/image", (req, res) => {
   const { id } = req.body;
   let found = false;
@@ -110,7 +130,8 @@ app.put("/image", (req, res) => {
 // });
 
 //listening on our port
-app.listen(3001, () => {
+port = 3002;
+app.listen(port, () => {
   console.log("i am running");
 });
 
