@@ -130,9 +130,9 @@ app.put("/image", (req, res) => {
 // });
 
 //listening on our port
-port = 3002;
-app.listen(port, () => {
-  console.log("i am running");
+port = 3003;
+app.listen(port, "0.0.0.0", () => {
+  console.log("running");
 });
 
 /*
