@@ -9,8 +9,26 @@ const app = express();
 //body parser
 app.use(bodyParser.json());
 
-//cors
-app.use(cors());
+//cors, allow any sit to access the server
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "OPTIONS, GET, POST, PUT, PATCH, DELETE" // what matters here is that OPTIONS is present
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization",
+    "Access-Control-Allow-Origin"
+  );
+  next();
+});
 
 //our database
 const database = {
@@ -130,7 +148,7 @@ app.put("/image", (req, res) => {
 // });
 
 //listening on our port
-port = 3003;
+port = 3004;
 app.listen(port, "0.0.0.0", () => {
   console.log("running");
 });
