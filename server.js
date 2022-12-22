@@ -1,21 +1,34 @@
-//getting the libary
+//IMPORTS
 const express = require("express");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
+
+/*
+---------Our Endpoints-----------
+/                --> this is home
+/signin          --> POST = success/fail
+/register        --> POST = user
+/profile/:userID --> GET = user 
+/image           --> PUT --> user 
+
+*/
+
 //calling express on our application
 const app = express();
 
-//body parser
+//adding body parser to the app, we need to parse our data to json
 app.use(bodyParser.json());
 
-//cors, allow any sit to access the server
+//cors, allow any site to access the server
+//allows the server to indicate any origins, (domain, scheme, port)
 app.use(
   cors({
     origin: "*",
   })
 );
 
+//setting the header controls
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -30,7 +43,7 @@ app.use((req, res, next) => {
   next();
 });
 
-//our database
+//our manual database until we add postgres
 const database = {
   users: [
     {
@@ -59,12 +72,12 @@ const database = {
   ],
 };
 
-//HOME ENDPOINT
+//HOME ENDPOINT -> displays the users in our manual database
 app.get("/", (req, res) => {
   res.send(database.users);
 });
 
-//SIGNIN ENDPOINT
+//SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
 app.post("/signin", (req, res) => {
   //hash functions testing
   bcrypt.compare(
@@ -82,7 +95,7 @@ app.post("/signin", (req, res) => {
     }
   );
 
-  //authentication
+  //authentication: check if the user is in the database and returns the user
   if (
     req.body.email === database.users[0].email &&
     req.body.password === database.users[0].password
@@ -93,7 +106,7 @@ app.post("/signin", (req, res) => {
   }
 });
 
-//REGISTER ENDPOINT
+//REGISTER ENDPOINT -> adds a new user to the database
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
   database.users.push({
@@ -107,8 +120,7 @@ app.post("/register", (req, res) => {
   res.json(database.users[database.users.length - 1]);
 });
 
-//PROFILE HOME ENDPOINT
-//user home page after loggin in
+//PROFILE HOME ENDPOINT -> checks each user in the database to return current user
 app.get("/profile/:id", (req, res) => {
   const { id } = req.params;
   let found = false;
@@ -118,12 +130,13 @@ app.get("/profile/:id", (req, res) => {
       return res.json(user);
     }
   });
+  //if user is not in the database
   if (!found) {
     res.status(400).json("not found");
   }
 });
 
-//IMAGE RANK ENDPOINT
+//IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
 app.put("/image", (req, res) => {
   const { id } = req.body;
   let found = false;
@@ -134,31 +147,14 @@ app.put("/image", (req, res) => {
       return res.json(user.entries);
     }
   });
+  //if the user is not in database
   if (!found) {
     res.status(400).json("not found");
   }
 });
 
-// // Load hash from your password DB.
-// bcrypt.compare("bacon", hash, function(err, res) {
-//   // res == true
-// });
-// bcrypt.compare("veggies", hash, function(err, res) {
-//   // res = false
-// });
-
-//listening on our port
+//Run server on port 3004 and output running in terminal
 port = 3004;
 app.listen(port, "0.0.0.0", () => {
   console.log("running");
 });
-
-/*
----------Our Endpoints-----------
-/                --> this is home
-/signin          --> POST = success/fail
-/register        --> POST = user
-/profile/:userID --> GET = user 
-/image           --> PUT --> user 
-
-*/
