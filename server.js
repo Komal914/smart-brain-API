@@ -99,32 +99,33 @@ app.get("/", (req, res) => {
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
 app.post("/signin", (req, res) => {
-  const { email, id, password } = req.body;
-  //hash functions testing
-  bcrypt.compare(
-    "chocolate",
-    "$2a$10$nXuSTteqYgS9nwidrC9WRuIzIklUsQ0BtbSZn2CRbnwndvxT6mVri",
-    function (err, res) {
-      console.log("first guess", res);
-    }
-  );
-  bcrypt.compare(
-    "bacon",
-    "$2a$10$nXuSTteqYgS9nwidrC9WRuIzIklUsQ0BtbSZn2CRbnwndvxT6mVri",
-    function (err, res) {
-      console.log("Second guess", res);
-    }
-  );
-
-  //authentication: check if the user is in the database and returns the user
-  if (
-    req.body.email === database.users[0].email &&
-    req.body.password === database.users[0].password
-  ) {
-    res.json(database.users[0]);
-  } else {
-    res.status(400).json("Error logging in cutiepie");
-  }
+  //getting email and hash from database
+  db.select("email", "hash")
+    .from("login")
+    .where("email", "=", req.body.email)
+    .then((data) => {
+      const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
+      console.log(isValid);
+      //if the user login info matches the request body
+      if (isValid) {
+        return db
+          .select("*")
+          .from("users")
+          .where("email", "=", req.body.email)
+          .then((user) => {
+            console.log(user);
+            res.json(user[0]);
+          })
+          .catch((err) => {
+            res.status(400).json("unable to get user");
+          });
+      } else {
+        res.status(400).json("Wrong credentials");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json("wrong credentials");
+    });
 });
 
 //REGISTER ENDPOINT -> adds a new user to the database
