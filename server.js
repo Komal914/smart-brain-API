@@ -65,7 +65,7 @@ app.use((req, res, next) => {
 
 //HOME ENDPOINT -> displays the users in our manual database
 app.get("/", (req, res) => {
-  res.send(database.users);
+  //res.send(database.users);
 });
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
@@ -158,7 +158,7 @@ app.put("/image", (req, res) => {
     .increment("entries", 1)
     .returning("entries")
     .then((entries) => {
-      res.json(entries[0]);
+      res.json(entries[0].entries);
     })
     .catch((error) => res.status(400).json("unable to get entries"));
 });
