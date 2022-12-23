@@ -99,6 +99,7 @@ app.get("/", (req, res) => {
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
 app.post("/signin", (req, res) => {
+  const { email, id, password } = req.body;
   //hash functions testing
   bcrypt.compare(
     "chocolate",
@@ -164,18 +165,14 @@ app.get("/profile/:id", (req, res) => {
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
 app.put("/image", (req, res) => {
   const { id } = req.body;
-  let found = false;
-  database.users.forEach((user) => {
-    if (user.id === id) {
-      found = true;
-      user.entries++;
-      return res.json(user.entries);
-    }
-  });
-  //if the user is not in database
-  if (!found) {
-    res.status(400).json("not found");
-  }
+  db("users")
+    .where("id", "=", id)
+    .increment("entries", 1)
+    .returning("entries")
+    .then((entries) => {
+      res.json(entries[0]);
+    })
+    .catch((error) => res.status(400).json("unable to get entries"));
 });
 
 //Run server on port 3004 and output running in terminal
