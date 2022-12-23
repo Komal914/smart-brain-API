@@ -130,17 +130,33 @@ app.post("/signin", (req, res) => {
 //REGISTER ENDPOINT -> adds a new user to the database
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
-  db("users")
-    .returning("*")
-    .insert({
-      name: name,
-      email: email,
-      joined: new Date(),
-    })
-    .then((user) => {
-      res.json(user[0]);
-    })
-    .catch((err) => res.status(400).json("Unable to register"));
+  const hash = bcrypt.hashSync(password);
+  //transaction forces both to fail if one fails to avoid inconsitentsies in users and logins
+  db.transaction((trx) => {
+    trx
+      .insert({
+        hash: hash,
+        email: email,
+      })
+      .into("login")
+      .returning("email")
+      .then((loginemail) => {
+        return trx("users")
+          .returning("*")
+          .insert({
+            name: name,
+            email: loginemail[0].email,
+            joined: new Date(),
+          })
+          .then((user) => {
+            res.json(user[0]);
+          });
+      })
+      .then(trx.commit)
+      .catch(trx.rollback);
+  }).catch((err) => {
+    res.status(400).json("Unable to register");
+  });
 });
 
 //PROFILE HOME ENDPOINT -> checks each user in the database to return current user
