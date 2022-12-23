@@ -63,35 +63,6 @@ app.use((req, res, next) => {
   next();
 });
 
-//our manual database until we add postgres
-const database = {
-  users: [
-    {
-      id: "123",
-      name: "john",
-      password: "cookies",
-      email: "john@gmail.com",
-      entries: 0,
-      joined: new Date(),
-    },
-    {
-      id: "124",
-      name: "Sally",
-      password: "apples",
-      email: "Sally@gmail.com",
-      entries: 0,
-      joined: new Date(),
-    },
-  ],
-  login: [
-    {
-      id: 123,
-      hash: "",
-      email: "john@gmail.com",
-    },
-  ],
-};
-
 //HOME ENDPOINT -> displays the users in our manual database
 app.get("/", (req, res) => {
   res.send(database.users);
