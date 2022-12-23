@@ -7,18 +7,22 @@ const pg = require("pg");
 const knex = require("knex");
 
 //connecting to the database
-const postgres = knex({
+const db = knex({
   client: "pg",
   connection: {
     host: "127.0.0.1",
-    port: 3306,
+    port: 5432,
     user: "komalkaur",
     password: "Whatever5",
     database: "smart-brain",
   },
 });
 
-console.log(postgres.select("*").from("users"));
+db.select("*")
+  .from("users")
+  .then((data) => {
+    console.log(data);
+  });
 
 /*
 ---------Our Endpoints-----------
@@ -125,31 +129,36 @@ app.post("/signin", (req, res) => {
 //REGISTER ENDPOINT -> adds a new user to the database
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
-  database.users.push({
-    id: "125",
-    name: name,
-    email: email,
-    entries: 0,
-    joined: new Date(),
-  });
-  //returs the current user
-  res.json(database.users[database.users.length - 1]);
+  db("users")
+    .returning("*")
+    .insert({
+      name: name,
+      email: email,
+      joined: new Date(),
+    })
+    .then((user) => {
+      res.json(user[0]);
+    })
+    .catch((err) => res.status(400).json("Unable to register"));
 });
 
 //PROFILE HOME ENDPOINT -> checks each user in the database to return current user
 app.get("/profile/:id", (req, res) => {
   const { id } = req.params;
-  let found = false;
-  database.users.forEach((user) => {
-    if (user.id === id) {
-      found = true;
-      return res.json(user);
-    }
-  });
-  //if user is not in the database
-  if (!found) {
-    res.status(400).json("not found");
-  }
+  //get all the users and send the user requested
+  db.select("*")
+    .from("users")
+    .where({ id })
+    .then((user) => {
+      if (user.length) {
+        res.json(user[0]);
+      } else {
+        res.status(400).json("Not Found");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json("error getting user");
+    });
 });
 
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
