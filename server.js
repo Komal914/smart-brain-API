@@ -7,18 +7,22 @@ const pg = require("pg");
 const knex = require("knex");
 
 //connecting to the database
-const postgres = knex({
+const db = knex({
   client: "pg",
   connection: {
     host: "127.0.0.1",
-    port: 3306,
+    port: 5432,
     user: "komalkaur",
     password: "Whatever5",
     database: "smart-brain",
   },
 });
 
-console.log(postgres.select("*").from("users"));
+db.select("*")
+  .from("users")
+  .then((data) => {
+    console.log(data);
+  });
 
 /*
 ---------Our Endpoints-----------
@@ -59,114 +63,104 @@ app.use((req, res, next) => {
   next();
 });
 
-//our manual database until we add postgres
-const database = {
-  users: [
-    {
-      id: "123",
-      name: "john",
-      password: "cookies",
-      email: "john@gmail.com",
-      entries: 0,
-      joined: new Date(),
-    },
-    {
-      id: "124",
-      name: "Sally",
-      password: "apples",
-      email: "Sally@gmail.com",
-      entries: 0,
-      joined: new Date(),
-    },
-  ],
-  login: [
-    {
-      id: 123,
-      hash: "",
-      email: "john@gmail.com",
-    },
-  ],
-};
-
 //HOME ENDPOINT -> displays the users in our manual database
 app.get("/", (req, res) => {
-  res.send(database.users);
+  //res.send(database.users);
 });
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
 app.post("/signin", (req, res) => {
-  //hash functions testing
-  bcrypt.compare(
-    "chocolate",
-    "$2a$10$nXuSTteqYgS9nwidrC9WRuIzIklUsQ0BtbSZn2CRbnwndvxT6mVri",
-    function (err, res) {
-      console.log("first guess", res);
-    }
-  );
-  bcrypt.compare(
-    "bacon",
-    "$2a$10$nXuSTteqYgS9nwidrC9WRuIzIklUsQ0BtbSZn2CRbnwndvxT6mVri",
-    function (err, res) {
-      console.log("Second guess", res);
-    }
-  );
-
-  //authentication: check if the user is in the database and returns the user
-  if (
-    req.body.email === database.users[0].email &&
-    req.body.password === database.users[0].password
-  ) {
-    res.json(database.users[0]);
-  } else {
-    res.status(400).json("Error logging in cutiepie");
-  }
+  //getting email and hash from database
+  db.select("email", "hash")
+    .from("login")
+    .where("email", "=", req.body.email)
+    .then((data) => {
+      const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
+      console.log(isValid);
+      //if the user login info matches the request body
+      if (isValid) {
+        return db
+          .select("*")
+          .from("users")
+          .where("email", "=", req.body.email)
+          .then((user) => {
+            console.log(user);
+            res.json(user[0]);
+          })
+          .catch((err) => {
+            res.status(400).json("unable to get user");
+          });
+      } else {
+        res.status(400).json("Wrong credentials");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json("wrong credentials");
+    });
 });
 
 //REGISTER ENDPOINT -> adds a new user to the database
 app.post("/register", (req, res) => {
   const { email, name, password } = req.body;
-  database.users.push({
-    id: "125",
-    name: name,
-    email: email,
-    entries: 0,
-    joined: new Date(),
+  const hash = bcrypt.hashSync(password);
+  //transaction forces both to fail if one fails to avoid inconsitentsies in users and logins
+  db.transaction((trx) => {
+    trx
+      .insert({
+        hash: hash,
+        email: email,
+      })
+      .into("login")
+      .returning("email")
+      .then((loginemail) => {
+        return trx("users")
+          .returning("*")
+          .insert({
+            name: name,
+            email: loginemail[0].email,
+            joined: new Date(),
+          })
+          .then((user) => {
+            res.json(user[0]);
+          });
+      })
+      .then(trx.commit)
+      .catch(trx.rollback);
+  }).catch((err) => {
+    res.status(400).json("Unable to register");
   });
-  //returs the current user
-  res.json(database.users[database.users.length - 1]);
 });
 
 //PROFILE HOME ENDPOINT -> checks each user in the database to return current user
 app.get("/profile/:id", (req, res) => {
   const { id } = req.params;
-  let found = false;
-  database.users.forEach((user) => {
-    if (user.id === id) {
-      found = true;
-      return res.json(user);
-    }
-  });
-  //if user is not in the database
-  if (!found) {
-    res.status(400).json("not found");
-  }
+  //get all the users and send the user requested
+  db.select("*")
+    .from("users")
+    .where({ id })
+    .then((user) => {
+      if (user.length) {
+        res.json(user[0]);
+      } else {
+        res.status(400).json("Not Found");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json("error getting user");
+    });
 });
 
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
 app.put("/image", (req, res) => {
   const { id } = req.body;
-  let found = false;
-  database.users.forEach((user) => {
-    if (user.id === id) {
-      found = true;
-      user.entries++;
-      return res.json(user.entries);
-    }
-  });
-  //if the user is not in database
-  if (!found) {
-    res.status(400).json("not found");
-  }
+  db("users")
+    .where("id", "=", id)
+    .increment("entries", 1)
+    .returning("entries")
+    .then((entries) => {
+      res.json(entries[0].entries);
+    })
+    .catch((error) => res.status(400).json("unable to get entries"));
 });
 
 //Run server on port 3004 and output running in terminal
