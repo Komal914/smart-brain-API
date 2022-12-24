@@ -9,6 +9,7 @@ const knex = require("knex");
 const register = require("./controllers/register");
 const signin = require("./controllers/signin");
 const profile = require("./controllers/profile");
+const image = require("./controllers/image");
 
 //connecting to the database
 const db = knex({
@@ -27,16 +28,6 @@ db.select("*")
   .then((data) => {
     console.log(data);
   });
-
-/*
----------Our Endpoints-----------
-/                --> this is home
-/signin          --> POST = success/fail
-/register        --> POST = user
-/profile/:userID --> GET = user 
-/image           --> PUT --> user 
-
-*/
 
 //calling express on our application
 const app = express();
@@ -89,15 +80,7 @@ app.get("/profile/:id", (req, res) => {
 
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
 app.put("/image", (req, res) => {
-  const { id } = req.body;
-  db("users")
-    .where("id", "=", id)
-    .increment("entries", 1)
-    .returning("entries")
-    .then((entries) => {
-      res.json(entries[0].entries);
-    })
-    .catch((error) => res.status(400).json("unable to get entries"));
+  image.handleImage(req, res, db);
 });
 
 //Run server on port 3004 and output running in terminal
