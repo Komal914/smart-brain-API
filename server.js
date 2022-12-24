@@ -8,6 +8,7 @@ const knex = require("knex");
 
 const register = require("./controllers/register");
 const signin = require("./controllers/signin");
+const profile = require("./controllers/profile");
 
 //connecting to the database
 const db = knex({
@@ -83,21 +84,7 @@ app.post("/register", (req, res) => {
 
 //PROFILE HOME ENDPOINT -> checks each user in the database to return current user
 app.get("/profile/:id", (req, res) => {
-  const { id } = req.params;
-  //get all the users and send the user requested
-  db.select("*")
-    .from("users")
-    .where({ id })
-    .then((user) => {
-      if (user.length) {
-        res.json(user[0]);
-      } else {
-        res.status(400).json("Not Found");
-      }
-    })
-    .catch((err) => {
-      res.status(400).json("error getting user");
-    });
+  profile.handleProfileGet(req, res, db);
 });
 
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
