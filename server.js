@@ -75,6 +75,11 @@ app.get("/profile/:id", profile.handleProfileGet(db));
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
 app.put("/image", image.handleImage(db));
 
+//handles the api call to clarifai to protect our api key from frontend
+app.post("/imageurl", (req, res) => {
+  image.handleApiCall(req, res);
+});
+
 //Run server on port 3004 and output running in terminal
 port = 3004;
 app.listen(port, "0.0.0.0", () => {

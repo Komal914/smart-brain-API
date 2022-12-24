@@ -1,5 +1,6 @@
 const handleRegister = (db, bcrypt) => (req, res) => {
   const { email, name, password } = req.body;
+  //if the values are not defined, do not add them to database
   if (!email || !name || !password) {
     return res.status(400).json("incorrect form submission");
   }
