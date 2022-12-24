@@ -6,6 +6,8 @@ const cors = require("cors");
 const pg = require("pg");
 const knex = require("knex");
 
+const register = require("./controllers/register");
+
 //connecting to the database
 const db = knex({
   client: "pg",
@@ -101,34 +103,7 @@ app.post("/signin", (req, res) => {
 
 //REGISTER ENDPOINT -> adds a new user to the database
 app.post("/register", (req, res) => {
-  const { email, name, password } = req.body;
-  const hash = bcrypt.hashSync(password);
-  //transaction forces both to fail if one fails to avoid inconsitentsies in users and logins
-  db.transaction((trx) => {
-    trx
-      .insert({
-        hash: hash,
-        email: email,
-      })
-      .into("login")
-      .returning("email")
-      .then((loginemail) => {
-        return trx("users")
-          .returning("*")
-          .insert({
-            name: name,
-            email: loginemail[0].email,
-            joined: new Date(),
-          })
-          .then((user) => {
-            res.json(user[0]);
-          });
-      })
-      .then(trx.commit)
-      .catch(trx.rollback);
-  }).catch((err) => {
-    res.status(400).json("Unable to register");
-  });
+  register.handleRegister(req, res, db, bcrypt);
 });
 
 //PROFILE HOME ENDPOINT -> checks each user in the database to return current user
