@@ -7,6 +7,7 @@ const pg = require("pg");
 const knex = require("knex");
 
 const register = require("./controllers/register");
+const signin = require("./controllers/signin");
 
 //connecting to the database
 const db = knex({
@@ -72,33 +73,7 @@ app.get("/", (req, res) => {
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
 app.post("/signin", (req, res) => {
-  //getting email and hash from database
-  db.select("email", "hash")
-    .from("login")
-    .where("email", "=", req.body.email)
-    .then((data) => {
-      const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
-      console.log(isValid);
-      //if the user login info matches the request body
-      if (isValid) {
-        return db
-          .select("*")
-          .from("users")
-          .where("email", "=", req.body.email)
-          .then((user) => {
-            console.log(user);
-            res.json(user[0]);
-          })
-          .catch((err) => {
-            res.status(400).json("unable to get user");
-          });
-      } else {
-        res.status(400).json("Wrong credentials");
-      }
-    })
-    .catch((err) => {
-      res.status(400).json("wrong credentials");
-    });
+  signin.handleSignin(req, res, db, bcrypt);
 });
 
 //REGISTER ENDPOINT -> adds a new user to the database
