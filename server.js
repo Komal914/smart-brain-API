@@ -64,24 +64,16 @@ app.get("/", (req, res) => {
 });
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
-app.post("/signin", (req, res) => {
-  signin.handleSignin(req, res, db, bcrypt);
-});
+app.post("/signin", signin.handleSignin(db, bcrypt));
 
 //REGISTER ENDPOINT -> adds a new user to the database
-app.post("/register", (req, res) => {
-  register.handleRegister(req, res, db, bcrypt);
-});
+app.post("/register", register.handleRegister(db, bcrypt));
 
 //PROFILE HOME ENDPOINT -> checks each user in the database to return current user
-app.get("/profile/:id", (req, res) => {
-  profile.handleProfileGet(req, res, db);
-});
+app.get("/profile/:id", profile.handleProfileGet(db));
 
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
-app.put("/image", (req, res) => {
-  image.handleImage(req, res, db);
-});
+app.put("/image", image.handleImage(db));
 
 //Run server on port 3004 and output running in terminal
 port = 3004;
