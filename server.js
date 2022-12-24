@@ -6,6 +6,11 @@ const cors = require("cors");
 const pg = require("pg");
 const knex = require("knex");
 
+const register = require("./controllers/register");
+const signin = require("./controllers/signin");
+const profile = require("./controllers/profile");
+const image = require("./controllers/image");
+
 //connecting to the database
 const db = knex({
   client: "pg",
@@ -23,16 +28,6 @@ db.select("*")
   .then((data) => {
     console.log(data);
   });
-
-/*
----------Our Endpoints-----------
-/                --> this is home
-/signin          --> POST = success/fail
-/register        --> POST = user
-/profile/:userID --> GET = user 
-/image           --> PUT --> user 
-
-*/
 
 //calling express on our application
 const app = express();
@@ -69,99 +64,16 @@ app.get("/", (req, res) => {
 });
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
-app.post("/signin", (req, res) => {
-  //getting email and hash from database
-  db.select("email", "hash")
-    .from("login")
-    .where("email", "=", req.body.email)
-    .then((data) => {
-      const isValid = bcrypt.compareSync(req.body.password, data[0].hash);
-      console.log(isValid);
-      //if the user login info matches the request body
-      if (isValid) {
-        return db
-          .select("*")
-          .from("users")
-          .where("email", "=", req.body.email)
-          .then((user) => {
-            console.log(user);
-            res.json(user[0]);
-          })
-          .catch((err) => {
-            res.status(400).json("unable to get user");
-          });
-      } else {
-        res.status(400).json("Wrong credentials");
-      }
-    })
-    .catch((err) => {
-      res.status(400).json("wrong credentials");
-    });
-});
+app.post("/signin", signin.handleSignin(db, bcrypt));
 
 //REGISTER ENDPOINT -> adds a new user to the database
-app.post("/register", (req, res) => {
-  const { email, name, password } = req.body;
-  const hash = bcrypt.hashSync(password);
-  //transaction forces both to fail if one fails to avoid inconsitentsies in users and logins
-  db.transaction((trx) => {
-    trx
-      .insert({
-        hash: hash,
-        email: email,
-      })
-      .into("login")
-      .returning("email")
-      .then((loginemail) => {
-        return trx("users")
-          .returning("*")
-          .insert({
-            name: name,
-            email: loginemail[0].email,
-            joined: new Date(),
-          })
-          .then((user) => {
-            res.json(user[0]);
-          });
-      })
-      .then(trx.commit)
-      .catch(trx.rollback);
-  }).catch((err) => {
-    res.status(400).json("Unable to register");
-  });
-});
+app.post("/register", register.handleRegister(db, bcrypt));
 
 //PROFILE HOME ENDPOINT -> checks each user in the database to return current user
-app.get("/profile/:id", (req, res) => {
-  const { id } = req.params;
-  //get all the users and send the user requested
-  db.select("*")
-    .from("users")
-    .where({ id })
-    .then((user) => {
-      if (user.length) {
-        res.json(user[0]);
-      } else {
-        res.status(400).json("Not Found");
-      }
-    })
-    .catch((err) => {
-      res.status(400).json("error getting user");
-    });
-});
+app.get("/profile/:id", profile.handleProfileGet(db));
 
 //IMAGE RANK ENDPOINT -> increases the entries if the current user detects a face with clarafai API
-app.put("/image", (req, res) => {
-  const { id } = req.body;
-  db("users")
-    .where("id", "=", id)
-    .increment("entries", 1)
-    .returning("entries")
-    .then((entries) => {
-      res.json(entries[0].entries);
-    })
-    .catch((error) => res.status(400).json("unable to get entries"));
-});
+app.put("/image", image.handleImage(db));
 
 //Run server on port 3004 and output running in terminal
 port = 3004;
