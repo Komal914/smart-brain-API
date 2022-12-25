@@ -83,5 +83,5 @@ app.post("/imageurl", (req, res) => {
 //Run server on port 3004 and output running in terminal
 port = 3004;
 app.listen(process.env.PORT || 3004, "0.0.0.0", () => {
-  console.log(`running on ${proccess.env.PORT} `);
+  console.log(`running on ${process.env.PORT} `);
 });
