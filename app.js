@@ -11,15 +11,16 @@ const signin = require("./controllers/signin");
 const profile = require("./controllers/profile");
 const image = require("./controllers/image");
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+
 //connecting to the database
 const db = knex({
   client: "pg",
   connection: {
-    host: "0.0.0.0",
-    port: 5432,
-    user: "komalkaur",
-    password: "Whatever5",
-    database: "smart-brain",
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
   },
 });
 
@@ -60,7 +61,7 @@ app.use((req, res, next) => {
 
 //HOME ENDPOINT -> displays the users in our manual database
 app.get("/", (req, res) => {
-  //res.send(database.users);
+  res.send("it is working!");
 });
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
@@ -82,6 +83,6 @@ app.post("/imageurl", (req, res) => {
 
 //Run server on port 3004 and output running in terminal
 port = 3004;
-app.listen(port, "0.0.0.0", () => {
-  console.log("running");
+app.listen(process.env.PORT || 3004, "0.0.0.0", () => {
+  console.log(`running on ${process.env.PORT} `);
 });
