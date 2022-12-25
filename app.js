@@ -15,28 +15,12 @@ const image = require("./controllers/image");
 const db = knex({
   client: "pg",
   connection: {
-    host: "127.0.0.0",
+    host: "0.0.0.0",
     port: 5432,
     user: "komalkaur",
     password: "Whatever5",
     database: "smart-brain",
   },
-});
-
-var conString = "postgres://mehqshfl:V_9y498ZJoJtRhWHMQ9DIGP0h89S7kpJ@suleiman.db.elephantsql.com/mehqshfl" //Can be found in the Details page
-var client = new pg.Client(conString);
-client.connect(function(err) {
-  if(err) {
-    return console.error('could not connect to postgres', err);
-  }
-  client.query('SELECT NOW() AS "theTime"', function(err, result) {
-    if(err) {
-      return console.error('error running query', err);
-    }
-    console.log(result.rows[0].theTime);
-    // >> output: 2018-08-23T14:02:57.117Z
-    client.end();
-  });
 });
 
 db.select("*")
