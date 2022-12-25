@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 
 //HOME ENDPOINT -> displays the users in our manual database
 app.get("/", (req, res) => {
-  //res.send(database.users);
+  res.send("it is working!");
 });
 
 //SIGNIN ENDPOINT -> the sign in log in: authenticates the user to log into their account to personalize their home
