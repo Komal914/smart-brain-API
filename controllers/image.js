@@ -2,7 +2,7 @@ const Clarifai = require("clarifai");
 
 //our face detection API
 const app = new Clarifai.App({
-  apiKey: "7523494fd75c4a70b1f43a9bd6ccc4b1",
+  apiKey: process.env.CLARIFAI_API,
 });
 
 const handleApiCall = (req, res) => {
