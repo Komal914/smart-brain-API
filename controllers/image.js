@@ -12,7 +12,18 @@ const handleApiCall = (req, res) => {
       res.json(data);
     })
     .catch((err) => {
-      res.status(400).json("unable to work with API ");
+      res.status(400).json("FACE DETECTION MODEL: unable to work with API ");
+    });
+};
+
+const handleDescriptionApiCall = (req, res) => {
+  app.models
+    .predict(Clarifai.GENERAL_MODEL, req.body.input)
+    .then((data) => {
+      res.json(data);
+    })
+    .catch((err) => {
+      res.status(400).json("GENERAL MODEL: unable to work with API ");
     });
 };
 
@@ -31,4 +42,5 @@ const handleImage = (db) => (req, res) => {
 module.exports = {
   handleImage,
   handleApiCall,
+  handleDescriptionApiCall,
 };
